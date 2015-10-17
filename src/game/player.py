@@ -87,7 +87,7 @@ class Player(BasePlayer):
             initial_order = pending_orders[0]
             station = self.valuationFunction(graph, initial_order, .25, .5)
             commands.append(self.build_command(station))
-            self.stations.add(graph.nodes()[0])
+            self.stations.add(station)
             self.has_built_station = True
         else:
             if state.get_money() > INIT_BUILD_COST * (BUILD_FACTOR**len(self.stations)):
