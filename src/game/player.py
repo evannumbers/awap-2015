@@ -25,6 +25,9 @@ class Player(BasePlayer):
         self.stations = set()
         return
 
+    def should_build(self, state):
+        return (state.get_time() * 1.0 / GAME_LENGTH) <= 0.25
+
     def update_station_scores(self, state, new_order):
         new_scores = [0] * len(self.station_scores)
         def BFS(graph, nodes, money):
@@ -72,7 +75,7 @@ class Player(BasePlayer):
         removed = self.removeUsedEdges(graph)
 
         pending_orders = state.get_pending_orders()
-        
+
         #if (len(pending_orders) > 0 and
         #        pending_orders[-1].get_time_created() == state.get_time()):
         self.station_scores = map(lambda x: x*0.9, self.station_scores)
@@ -87,7 +90,7 @@ class Player(BasePlayer):
             commands.append(self.build_command(station))
             self.stations.add(graph.nodes()[0])
             self.has_built_station = True
-        else:
+        elif self.should_build(state):
             if state.get_money() > INIT_BUILD_COST * (BUILD_FACTOR**len(self.stations)):
                 #We have enough money
                 n_tuples = sorted([(self.station_scores[i], i) for i in xrange(len(self.station_scores))])[::-1]
@@ -97,7 +100,7 @@ class Player(BasePlayer):
                         commands.append(self.build_command(graph.nodes()[n[1]]))
                         break
 
-        
+
         # Try to send orders until we have none left
         while len(pending_orders) != 0:
             # Get the best possible order to satisfy first
