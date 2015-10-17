@@ -28,7 +28,7 @@ class Player(BasePlayer):
 
     def should_build(self, state):
         return ((state.get_time() * 1.0 / GAME_LENGTH) <= 0.15 and
-                len(self.stations) < HUBS)
+                len(self.stations) < max(HUBS, 2))
 
     def update_station_scores(self, state, new_order):
         new_scores = [0] * len(self.station_scores)
@@ -117,7 +117,7 @@ class Player(BasePlayer):
                     if not n[1] in self.stations:
                         self.stations.add(graph.nodes()[n[1]])
                         commands.append(self.build_command(graph.nodes()[n[1]]))
-                        
+
                         node = graph.nodes()[n[1]]
                         to_remove = None
                         for i in xrange(len(pending_orders)):
@@ -127,7 +127,7 @@ class Player(BasePlayer):
                                 break
                         if to_remove != None:
                             del pending_orders[to_remove]
-                        
+
                         break
 
 
