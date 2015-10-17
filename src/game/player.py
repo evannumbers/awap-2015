@@ -73,11 +73,11 @@ class Player(BasePlayer):
 
         pending_orders = state.get_pending_orders()
         
-        if (len(pending_orders) > 0 and
-                pending_orders[-1].get_time_created() == state.get_time()):
-            new_order = pending_orders[-1]
+        #if (len(pending_orders) > 0 and
+        #        pending_orders[-1].get_time_created() == state.get_time()):
+        self.station_scores = map(lambda x: x*0.9, self.station_scores)
+        for new_order in pending_orders:
             self.update_station_scores(state, new_order)
-            print max(self.station_scores), self.station_scores.index(max(self.station_scores))
 
         commands = []
 
@@ -92,7 +92,7 @@ class Player(BasePlayer):
         else:
             if state.get_money() > INIT_BUILD_COST * (BUILD_FACTOR**len(self.stations)):
                 #We have enough money
-                n_tuples = sorted([(self.station_scores[i], i) for i in xrange(len(self.station_scores))])
+                n_tuples = sorted([(self.station_scores[i], i) for i in xrange(len(self.station_scores))])[::-1]
                 for n in n_tuples:
                     if not n[1] in self.stations:
                         self.stations.add(graph.nodes()[n[1]])
@@ -166,4 +166,3 @@ class Player(BasePlayer):
             return (x1, v1) if v1 > v2 else (x2, v2)
 
         return reduce(bestValue, results)[0]
-
