@@ -117,6 +117,17 @@ class Player(BasePlayer):
                     if not n[1] in self.stations:
                         self.stations.add(graph.nodes()[n[1]])
                         commands.append(self.build_command(graph.nodes()[n[1]]))
+                        
+                        node = graph.nodes()[n[1]]
+                        to_remove = None
+                        for i in xrange(len(pending_orders)):
+                            if pending_orders[i].get_node() == node:
+                                commands.append(self.send_command(pending_orders[i], [node]))
+                                to_remove = i
+                                break
+                        if to_remove != None:
+                            del pending_orders[to_remove]
+                        
                         break
 
 
