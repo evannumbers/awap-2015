@@ -26,7 +26,7 @@ class Player(BasePlayer):
         return
 
     def should_build(self, state):
-        return (state.get_time() * 1.0 / GAME_LENGTH) <= 0.25
+        return (state.get_time() * 1.0 / GAME_LENGTH) <= 0.15
 
     def update_station_scores(self, state, new_order):
         new_scores = [0] * len(self.station_scores)
@@ -93,7 +93,7 @@ class Player(BasePlayer):
             self.stations.add(station)
             self.has_built_station = True
         elif self.should_build(state):
-            if state.get_money() > INIT_BUILD_COST * (BUILD_FACTOR**len(self.stations)):
+            if state.get_money() >= INIT_BUILD_COST * (BUILD_FACTOR**len(self.stations)):
                 #We have enough money
                 n_tuples = sorted([(self.station_scores[i], i) for i in xrange(len(self.station_scores))])[::-1]
                 for n in n_tuples:
@@ -104,7 +104,7 @@ class Player(BasePlayer):
 
 
         # Try to send orders until we have none left
-        while len(pending_orders) != 0:
+        while len(pending_orders) != 0 and len(self.stations) > 0:
             # Get the best possible order to satisfy first
             bestOrder = (0, [], None)
             for order in pending_orders:
@@ -161,10 +161,9 @@ class Player(BasePlayer):
         out_edges = {node: len(graph.neighbors(node)) for node in graph.nodes()}
 
         results = [(node,
-                    distances[node] * -DIST_VAL + 
+                    distances[node] * -DIST_VAL +
                     out_edges[node] * CONNECT_VAL) for node in distances]
 
-        print results
         def bestValue((x1, v1), (x2, v2)):
             return (x1, v1) if v1 > v2 else (x2, v2)
 
