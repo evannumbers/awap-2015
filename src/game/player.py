@@ -87,8 +87,10 @@ class Player(BasePlayer):
         print self.stations
 
         if len(self.stations) == 0: # first station
+            initial_order = pending_orders[0]
+            station = self.valuationFunction(graph, initial_order, .25, .5)
             commands.append(self.build_command(station))
-            self.stations.add(graph.nodes()[0])
+            self.stations.add(station)
             self.has_built_station = True
         elif self.should_build(state):
             if state.get_money() > INIT_BUILD_COST * (BUILD_FACTOR**len(self.stations)):
@@ -151,3 +153,19 @@ class Player(BasePlayer):
 
         removed.remove_edges_from(used_edges)
         return removed
+
+    def valuationFunction(self, graph, order, DIST_VAL, CONNECT_VAL):
+        distances = nx.shortest_path(graph, target=order.get_node())
+        distances = {node : len(distances[node]) for node in distances}
+
+        out_edges = {node: len(graph.neighbors(node)) for node in graph.nodes()}
+
+        results = [(node,
+                    distances[node] * -DIST_VAL + 
+                    out_edges[node] * CONNECT_VAL) for node in distances]
+
+        print results
+        def bestValue((x1, v1), (x2, v2)):
+            return (x1, v1) if v1 > v2 else (x2, v2)
+
+        return reduce(bestValue, results)[0]
