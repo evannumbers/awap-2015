@@ -130,7 +130,7 @@ class Player(BasePlayer):
             except nx.NetworkXNoPath:
                 return (-float('inf'), None)
 
-            return ((order.get_money() - len(path)), path)
+            return ((order.get_money() - DECAY_FACTOR * len(path)), path)
 
         def reduceToPath((m1, p1), (m2, p2)):
             return (m1, p1) if m1 > m2 else (m2, p2)
