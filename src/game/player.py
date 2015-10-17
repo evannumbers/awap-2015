@@ -78,11 +78,15 @@ class Player(BasePlayer):
 
         pending_orders = state.get_pending_orders()
 
-        #if (len(pending_orders) > 0 and
-        #        pending_orders[-1].get_time_created() == state.get_time()):
+        if (len(pending_orders) > 0 and
+                pending_orders[-1].get_time_created() == state.get_time()):
+            self.update_station_scores(state, pending_orders[-1])
+        """
         self.station_scores = map(lambda x: x*0.9, self.station_scores)
         for new_order in pending_orders:
             self.update_station_scores(state, new_order)
+        """
+
 
         commands = []
 
