@@ -21,8 +21,20 @@ class Player(BasePlayer):
         state : State
             The initial state of the game. See state.py for more information.
         """
-
+        self.station_scores = [0] * len(state.get_graph().nodes())
         return
+
+    def update_station_scores(self, state, new_order):
+        new_scores = [0] * len(self.station_scores)
+        def BFS(graph, node, money):
+            if new_scores[node] > money or money <= 0:
+                return
+            new_scores[node] = money
+            for neighbor in graph.neighbors_iter(node):
+                BFS(graph, neighbor, money - DECAY_FACTOR)
+        BFS(state.get_graph(), new_order.get_node(), new_order.get_money())
+        self.station_scores = map(lambda (x,y): x+y,
+                zip(new_scores, self.station_scores))
 
     # Checks if we can use a given path
     def path_is_valid(self, state, path):
@@ -53,12 +65,19 @@ class Player(BasePlayer):
         graph = state.get_graph()
         station = graph.nodes()[0]
 
+        pending_orders = state.get_pending_orders()
+        
+        if (len(pending_orders) > 0 and
+                pending_orders[-1].get_time_created() == state.get_time()):
+            new_order = pending_orders[-1]
+            self.update_station_scores(state, new_order)
+            print max(self.station_scores), self.station_scores.index(max(self.station_scores))
+
         commands = []
         if not self.has_built_station:
             commands.append(self.build_command(station))
             self.has_built_station = True
 
-        pending_orders = state.get_pending_orders()
         if len(pending_orders) != 0:
             order = random.choice(pending_orders)
             path = nx.shortest_path(graph, station, order.get_node())
