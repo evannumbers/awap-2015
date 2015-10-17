@@ -27,10 +27,12 @@ class Player(BasePlayer):
         return
 
     def should_build(self, state):
-        return (state.get_time() * 1.0 / GAME_LENGTH) <= 0.15
+        return ((state.get_time() * 1.0 / GAME_LENGTH) <= 0.15 and
+                len(self.stations) < HUBS)
 
     def update_station_scores(self, state, new_order):
         new_scores = [0] * len(self.station_scores)
+        neg_scores = [0] * len(self.station_scores)
         def BFS(graph, nodes, iteration):
             next = []
             if iteration > ORDER_VAR * 3:
@@ -41,9 +43,20 @@ class Player(BasePlayer):
                     new_scores[node] = new_value
                     next += graph.neighbors(node)
             BFS(graph, list(set(next)), iteration + 1)
+        def negBFS(graph, nodes, iteration):
+            next = []
+            if iteration > ORDER_VAR * 3:
+                return
+            for node in nodes:
+                new_value = (erf(iteration * 1.0 / ORDER_VAR) - 1) / ORDER_VAR
+                if neg_scores[node] > new_value:
+                    neg_scores[node] = new_value
+                    next += graph.neighbors(node)
+            negBFS(graph, list(set(next)), iteration + 1)
         BFS(state.get_graph(), [new_order.get_node()], 0)
-        self.station_scores = map(lambda (x,y): x+y,
-                zip(new_scores, self.station_scores))
+        negBFS(state.get_graph(), self.stations, 0)
+        self.station_scores = map(lambda (x,y,z): x+y+z,
+                zip(new_scores, neg_scores, self.station_scores))
 
     # Checks if we can use a given path
     def path_is_valid(self, state, path):
@@ -89,8 +102,6 @@ class Player(BasePlayer):
 
 
         commands = []
-
-        print self.stations
 
         if len(self.stations) == 0: # first station
             initial_order = pending_orders[0]
