@@ -2,6 +2,7 @@ import networkx as nx
 import random
 from base_player import BasePlayer
 from settings import *
+from math import erf
 
 class Player(BasePlayer):
     """
@@ -30,16 +31,17 @@ class Player(BasePlayer):
 
     def update_station_scores(self, state, new_order):
         new_scores = [0] * len(self.station_scores)
-        def BFS(graph, nodes, money):
+        def BFS(graph, nodes, iteration):
             next = []
-            if money <= 0:
+            if iteration > ORDER_VAR * 3:
                 return
             for node in nodes:
-                if new_scores[node] < money:
-                    new_scores[node] = money
+                new_value = 1 - erf(iteration * 1.0 / ORDER_VAR)
+                if new_scores[node] < new_value:
+                    new_scores[node] = new_value
                     next += graph.neighbors(node)
-            BFS(graph, list(set(next)), money - DECAY_FACTOR)
-        BFS(state.get_graph(), [new_order.get_node()], new_order.get_money())
+            BFS(graph, list(set(next)), iteration + 1)
+        BFS(state.get_graph(), [new_order.get_node()], 0)
         self.station_scores = map(lambda (x,y): x+y,
                 zip(new_scores, self.station_scores))
 
