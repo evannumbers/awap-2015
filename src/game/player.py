@@ -53,16 +53,64 @@ class Player(BasePlayer):
         graph = state.get_graph()
         station = graph.nodes()[0]
 
+        removed = self.removeUsedEdges(graph)
+        self.stations = [removed.nodes()[0]]
+
         commands = []
+
         if not self.has_built_station:
             commands.append(self.build_command(station))
             self.has_built_station = True
 
         pending_orders = state.get_pending_orders()
-        if len(pending_orders) != 0:
-            order = random.choice(pending_orders)
-            path = nx.shortest_path(graph, station, order.get_node())
-            if self.path_is_valid(state, path):
-                commands.append(self.send_command(order, path))
+        
+        # Try to send orders until we have none left
+        while len(pending_orders) != 0:
+            # Get the best possible order to satisfy first
+            bestOrder = (0, [], None)
+            for order in pending_orders:
+                # Find the best station for this order
+                highVal, highPath = self.findBestStation(removed, order)
+
+                if highVal > bestOrder[0]:
+                    bestOrder = (highVal, highPath, order)
+
+            # Add the order command if we could find one
+            if bestOrder[0] > 0:
+                commands.append(self.send_command(bestOrder[2], bestOrder[1]))
+            else:
+                break
+
+            # Remove this order and path and repeat
+            pending_orders.remove(order)
+
+            for i in xrange(len(bestOrder[1]) - 1):
+                removed.remove_edge(bestOrder[1][i], bestOrder[1][i+1])
 
         return commands
+
+    def findBestStation(self, graph, order):
+        def mapToVal(station):
+            try:
+                path = nx.shortest_path(graph, station, order.get_node())
+            except nx.NetworkXNoPath:
+                return (-float('inf'), None)
+
+            return ((order.get_money() - len(path)), path)
+
+        def reduceToPath((m1, p1), (m2, p2)):
+            return (m1, p1) if m1 > m2 else (m2, p2)
+
+        bestPath = reduce(reduceToPath, map(mapToVal, self.stations))
+        return bestPath
+
+    def removeUsedEdges(self, graph):
+        removed = graph.copy()
+
+        def isInUse(n):
+            return n[2]["in_use"]
+
+        used_edges = filter(isInUse, removed.edges(data=True))
+
+        removed.remove_edges_from(used_edges)
+        return removed
