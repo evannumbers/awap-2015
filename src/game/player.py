@@ -132,7 +132,7 @@ class Player(BasePlayer):
                     bestOrder = (highVal, highPath, order)
 
             # Add the order command if we could find one
-            if bestOrder[0] > 0:
+            if bestOrder[0] > SCORE_MEAN / 100.0:
                 commands.append(self.send_command(bestOrder[2], bestOrder[1]))
             else:
                 break
