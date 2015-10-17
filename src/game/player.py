@@ -26,13 +26,16 @@ class Player(BasePlayer):
 
     def update_station_scores(self, state, new_order):
         new_scores = [0] * len(self.station_scores)
-        def BFS(graph, node, money):
-            if new_scores[node] > money or money <= 0:
+        def BFS(graph, nodes, money):
+            next = []
+            if money <= 0:
                 return
-            new_scores[node] = money
-            for neighbor in graph.neighbors_iter(node):
-                BFS(graph, neighbor, money - DECAY_FACTOR)
-        BFS(state.get_graph(), new_order.get_node(), new_order.get_money())
+            for node in nodes:
+                if new_scores[node] < money:
+                    new_scores[node] = money
+                    next += graph.neighbors(node)
+            BFS(graph, list(set(next)), money - DECAY_FACTOR)
+        BFS(state.get_graph(), [new_order.get_node()], new_order.get_money())
         self.station_scores = map(lambda (x,y): x+y,
                 zip(new_scores, self.station_scores))
 
