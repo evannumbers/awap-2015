@@ -22,6 +22,7 @@ class Player(BasePlayer):
             The initial state of the game. See state.py for more information.
         """
         self.station_scores = [0] * len(state.get_graph().nodes())
+        self.stations = set()
         return
 
     def update_station_scores(self, state, new_order):
@@ -69,7 +70,6 @@ class Player(BasePlayer):
         station = graph.nodes()[0]
 
         removed = self.removeUsedEdges(graph)
-        self.stations = [removed.nodes()[0]]
 
         pending_orders = state.get_pending_orders()
         
@@ -81,9 +81,22 @@ class Player(BasePlayer):
 
         commands = []
 
-        if not self.has_built_station:
+        print self.stations
+
+        if len(self.stations) == 0: # first station
             commands.append(self.build_command(station))
+            self.stations.add(graph.nodes()[0])
             self.has_built_station = True
+        else:
+            if state.get_money() > INIT_BUILD_COST * (BUILD_FACTOR**len(self.stations)):
+                #We have enough money
+                n_tuples = sorted([(self.station_scores[i], i) for i in xrange(len(self.station_scores))])
+                for n in n_tuples:
+                    if not n[1] in self.stations:
+                        self.stations.add(graph.nodes()[n[1]])
+                        commands.append(self.build_command(graph.nodes()[n[1]]))
+                        break
+
         
         # Try to send orders until we have none left
         while len(pending_orders) != 0:
